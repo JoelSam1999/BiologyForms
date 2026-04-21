@@ -5,17 +5,17 @@ let chapters = [];
 let currentChapter = 0;
 let chapterScores = {};
 
-// 🔥 Normalize function (fixes ALL matching issues)
+// 🔥 Normalize text (fixes matching issues)
 function normalize(text) {
   return text
     ?.toString()
     .toLowerCase()
-    .replace(/[^\w\s]/g, "") // remove punctuation
-    .replace(/\s+/g, " ")    // normalize spaces
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
-// ✅ Robust CSV parser
+// ✅ CSV parser
 function parseCSV(text) {
   const rows = text.trim().split("\n");
 
@@ -45,7 +45,7 @@ function parseCSV(text) {
   });
 }
 
-// ✅ Load and group by chapter
+// ✅ Load questions
 async function loadQuestions() {
   try {
     const res = await fetch(SHEET_URL);
@@ -83,27 +83,40 @@ function loadChapter() {
   const questions = quizData[chapter];
 
   const quizDiv = document.getElementById("quiz");
-  quizDiv.innerHTML = `<h2>${chapter}</h2>`;
+
+  quizDiv.innerHTML = `
+    <h2>${chapter}</h2>
+    <div class="progress">
+      Chapter ${currentChapter + 1} of ${chapters.length}
+    </div>
+  `;
 
   questions.forEach((q, index) => {
-    let html = `<p><b>${index + 1}. ${q.question}</b></p>`;
+    let html = `<div class="question">
+      <p><b>${index + 1}. ${q.question}</b></p>`;
 
     q.options.forEach(opt => {
       html += `
         <label>
           <input type="radio" name="q${index}" value="${opt}">
           ${opt}
-        </label><br>
+        </label>
       `;
     });
 
-    quizDiv.innerHTML += html + "<br>";
+    html += "</div>";
+
+    quizDiv.innerHTML += html;
   });
 
-  quizDiv.innerHTML += `<button onclick="submitChapter()">Submit Chapter</button>`;
+  quizDiv.innerHTML += `
+    <button class="submit-btn" onclick="submitChapter()">
+      Submit Chapter
+    </button>
+  `;
 }
 
-// ✅ Submit chapter (FINAL FIXED VERSION)
+// ✅ Submit chapter (with answer highlighting)
 function submitChapter() {
   const chapter = chapters[currentChapter];
   const questions = quizData[chapter];
@@ -121,11 +134,14 @@ function submitChapter() {
     inputs.forEach((input, i) => {
       const label = input.parentElement;
 
-      // Reset styles
+      // Disable after submit
+      input.disabled = true;
+
+      // Reset style
       label.style.color = "";
       label.style.fontWeight = "";
 
-      // ✅ Always show correct answer
+      // ✅ Highlight correct
       if (i === correctIndex) {
         label.style.color = "green";
         label.style.fontWeight = "bold";
@@ -152,13 +168,19 @@ function submitChapter() {
   const resultDiv = document.getElementById("result");
 
   resultDiv.innerHTML = `
-    <h3>${chapter} Score: ${score}/${questions.length}</h3>
+    ${chapter} Score: ${score}/${questions.length}
   `;
 
   if (currentChapter < chapters.length - 1) {
-    resultDiv.innerHTML += `<button onclick="nextChapter()">Next Chapter →</button>`;
+    resultDiv.innerHTML += `
+      <br><br>
+      <button onclick="nextChapter()">Next Chapter →</button>
+    `;
   } else {
-    resultDiv.innerHTML += `<button onclick="showDashboard()">View Dashboard</button>`;
+    resultDiv.innerHTML += `
+      <br><br>
+      <button onclick="showDashboard()">View Dashboard</button>
+    `;
   }
 }
 
@@ -184,17 +206,22 @@ function showDashboard() {
     totalQuestions += data.total;
 
     html += `
-      <p><b>${ch}</b>: ${data.score}/${data.total} (${percent}%)</p>
+      <div class="question">
+        <b>${ch}</b><br>
+        ${data.score}/${data.total} (${percent}%)
+      </div>
     `;
   });
 
   const overall = ((totalScore / totalQuestions) * 100).toFixed(1);
 
-  html += `<h3>Overall Score: ${totalScore}/${totalQuestions} (${overall}%)</h3>`;
+  html += `
+    <h3>Overall Score: ${totalScore}/${totalQuestions} (${overall}%)</h3>
+  `;
 
   document.getElementById("quiz").innerHTML = html;
   document.getElementById("result").innerHTML = "";
 }
 
-// 🚀 Start
+// 🚀 Start app
 loadQuestions();
