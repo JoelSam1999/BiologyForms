@@ -47,7 +47,7 @@ function parseCSV(text) {
 
 //BACKEND FUNCTION
 function sendToSheet(data) {
-  fetch("YOUR_WEB_APP_URL", {
+  fetch("https://script.google.com/macros/s/AKfycbyvlvn2XDFZX3fpaX1KIqMci212ocGTD401BrcV1usIjVUS_06CvVmcvmYflbzk951Y/exec", {
     method: "POST",
     mode: "no-cors",
     body: JSON.stringify(data)
@@ -173,7 +173,16 @@ function submitChapter() {
     score,
     total: questions.length
   };
-
+  const name = document.getElementById("name").value || "Anonymous";
+  const email = document.getElementById("email").value || "NA";
+  
+  sendToSheet({
+    name: name,
+    email: email,
+    chapter: chapter,
+    score: score,
+    total: questions.length
+  });
   const resultDiv = document.getElementById("result");
 
   resultDiv.innerHTML = `
