@@ -5,7 +5,7 @@ let chapters = [];
 let currentChapter = 0;
 let chapterScores = {};
 
-// 🔥 Normalize text (fixes matching issues)
+// 🔥 Normalize text
 function normalize(text) {
   return text
     ?.toString()
@@ -45,11 +45,14 @@ function parseCSV(text) {
   });
 }
 
-//BACKEND FUNCTION
+// ✅ BACKEND FUNCTION (FIXED)
 function sendToSheet(data) {
   fetch("https://script.google.com/macros/s/AKfycbyvlvn2XDFZX3fpaX1KIqMci212ocGTD401BrcV1usIjVUS_06CvVmcvmYflbzk951Y/exec", {
     method: "POST",
     mode: "no-cors",
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(data)
   });
 }
@@ -86,7 +89,7 @@ async function loadQuestions() {
   }
 }
 
-// ✅ Load one chapter
+// ✅ Load chapter
 function loadChapter() {
   const chapter = chapters[currentChapter];
   const questions = quizData[chapter];
@@ -114,7 +117,6 @@ function loadChapter() {
     });
 
     html += "</div>";
-
     quizDiv.innerHTML += html;
   });
 
@@ -125,7 +127,7 @@ function loadChapter() {
   `;
 }
 
-// ✅ Submit chapter (with answer highlighting)
+// ✅ Submit chapter
 function submitChapter() {
   const chapter = chapters[currentChapter];
   const questions = quizData[chapter];
@@ -142,15 +144,8 @@ function submitChapter() {
 
     inputs.forEach((input, i) => {
       const label = input.parentElement;
-
-      // Disable after submit
       input.disabled = true;
 
-      // Reset style
-      label.style.color = "";
-      label.style.fontWeight = "";
-
-      // ✅ Highlight correct
       if (i === correctIndex) {
         label.style.color = "green";
         label.style.fontWeight = "bold";
@@ -163,7 +158,6 @@ function submitChapter() {
       if (selectedIndex === correctIndex) {
         score++;
       } else {
-        // ❌ Wrong answer
         selected.parentElement.style.color = "red";
       }
     }
@@ -173,32 +167,27 @@ function submitChapter() {
     score,
     total: questions.length
   };
+
+  // ✅ SEND DATA (fixed)
   const name = document.getElementById("name").value || "Anonymous";
   const email = document.getElementById("email").value || "NA";
-  
+
   sendToSheet({
-    name: name,
-    email: email,
-    chapter: chapter,
-    score: score,
+    name,
+    email,
+    chapter,
+    score,
     total: questions.length
   });
+
   const resultDiv = document.getElementById("result");
 
-  resultDiv.innerHTML = `
-    ${chapter} Score: ${score}/${questions.length}
-  `;
+  resultDiv.innerHTML = `${chapter} Score: ${score}/${questions.length}`;
 
   if (currentChapter < chapters.length - 1) {
-    resultDiv.innerHTML += `
-      <br><br>
-      <button onclick="nextChapter()">Next Chapter →</button>
-    `;
+    resultDiv.innerHTML += `<br><br><button onclick="nextChapter()">Next Chapter →</button>`;
   } else {
-    resultDiv.innerHTML += `
-      <br><br>
-      <button onclick="showDashboard()">View Dashboard</button>
-    `;
+    resultDiv.innerHTML += `<br><br><button onclick="showDashboard()">View Dashboard</button>`;
   }
 }
 
@@ -209,7 +198,7 @@ function nextChapter() {
   loadChapter();
 }
 
-// ✅ Final dashboard
+// ✅ Dashboard
 function showDashboard() {
   let totalScore = 0;
   let totalQuestions = 0;
@@ -233,13 +222,11 @@ function showDashboard() {
 
   const overall = ((totalScore / totalQuestions) * 100).toFixed(1);
 
-  html += `
-    <h3>Overall Score: ${totalScore}/${totalQuestions} (${overall}%)</h3>
-  `;
+  html += `<h3>Overall Score: ${totalScore}/${totalQuestions} (${overall}%)</h3>`;
 
   document.getElementById("quiz").innerHTML = html;
   document.getElementById("result").innerHTML = "";
 }
 
-// 🚀 Start app
+// 🚀 Start
 loadQuestions();
