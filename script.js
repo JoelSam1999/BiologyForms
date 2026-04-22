@@ -45,6 +45,15 @@ function parseCSV(text) {
   });
 }
 
+//BACKEND FUNCTION
+function sendToSheet(data) {
+  fetch("YOUR_WEB_APP_URL", {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify(data)
+  });
+}
+
 // ✅ Load questions
 async function loadQuestions() {
   try {
